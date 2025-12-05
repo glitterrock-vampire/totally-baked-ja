@@ -1,0 +1,1 @@
+{"project": {"name": "totally-baked"}, "api": {"projectId": "nlb9fjou", "dataset": "production"}, "plugins": ["@sanity/base", "@sanity/components", "@sanity/default-layout", "@sanity/default-login", "@sanity/desk-tool"], "env": {"development": {"api": {"projectId": "your-project-id", "dataset": "development"}}}}
