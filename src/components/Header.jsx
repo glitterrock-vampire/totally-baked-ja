@@ -1,25 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star, Coffee, Leaf, Newspaper, Instagram, FileText, HelpCircle, Download, Menu, X } from 'lucide-react';
+import pngegg from '../assets/images/pngegg.png';
 
 const Header = ({ cartCount }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Trigger shake animation on scroll
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500); // Reset after animation
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   return (
     <>
       <header className="bg-neutral-100 sticky top-0 z-50">
         <div className="flex items-start justify-between px-4 sm:px-6 py-4 sm:py-6">
           {/* Left - Brand */}
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 max-w-md relative">
+            {/* Background Image */}
+            <div 
+              className={`absolute -top-4 -left-4 w-24 h-24 opacity-30 ${isShaking ? 'animate-pulse' : ''}`}
+              style={{
+                transform: isShaking ? 'rotate(5deg) scale(1.1)' : 'rotate(0deg) scale(1)',
+                transition: 'transform 0.2s ease-in-out',
+                zIndex: 5,
+              }}
+            >
+              <img src={pngegg} alt="Background" className="w-full h-full object-contain" />
+            </div>
             <Link 
               to="/"
-              className="block group"
+              className="block group relative z-20 ml-12"
             >
-              <h1 className="text-lg sm:text-xl font-fascinate leading-tight hover:opacity-60 transition-opacity">
+              <h1 className="text-3xl sm:text-4xl font-fascinate leading-tight hover:opacity-60 transition-opacity">
                 totally
                 <br />
                 baked
               </h1>
-              <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+              <p className="text-sm sm:text-base text-black mt-1 relative z-20 font-bold">
                 {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toLowerCase()}
               </p>
             </Link>
