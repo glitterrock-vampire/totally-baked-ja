@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useSanityProduct } from '../hooks/useSanityProduct';
+import { useSanityProducts } from '../hooks/useSanity';
 
 const ProductPage = ({ cartCount, addToCart }) => {
   const { productId } = useParams();
   const { product, loading, error } = useSanityProduct(productId);
+  const { getImageUrl } = useSanityProducts();
 
   if (loading) {
     return (
@@ -75,7 +77,7 @@ const ProductPage = ({ cartCount, addToCart }) => {
             <div className="aspect-square bg-neutral-100 rounded-lg border-2 border-black">
               {product.images && product.images[0] ? (
                 <img 
-                  src={product.images[0]} 
+                  src={getImageUrl(product.images[0])} 
                   alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
@@ -87,7 +89,7 @@ const ProductPage = ({ cartCount, addToCart }) => {
               {product.images && product.images.slice(1).map((image, index) => (
                 <div key={index} className="aspect-square bg-neutral-100 rounded border border-neutral-300">
                   <img 
-                    src={image} 
+                    src={getImageUrl(image)} 
                     alt={`${product.name} ${index + 2}`}
                     className="w-full h-full object-cover rounded"
                   />
