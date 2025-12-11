@@ -3,23 +3,20 @@ import { useState } from 'react';
 export const useCart = () => {
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
     setCartItems(prevItems => {
-      // Check if product already exists in cart
       const existingItem = prevItems.find(item => 
         item.name === product.name && item.type === product.type
       );
       
       if (existingItem) {
-        // Update quantity if item exists
         return prevItems.map(item =>
           item.name === product.name && item.type === product.type
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        // Add new item with quantity 1
-        return [...prevItems, { ...product, quantity: 1 }];
+        return [...prevItems, { ...product, quantity }];
       }
     });
   };

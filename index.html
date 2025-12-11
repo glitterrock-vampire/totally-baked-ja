@@ -1,22 +1,52 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="height: auto; min-height: 100%;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>totally-baked</title>
+    <title>totally baked — engineering cannabis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fascinate+Inline&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&family=Archivo:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <style>
-      .fascinate-inline-regular {
-        font-family: "Fascinate Inline", system-ui;
-        font-weight: 400;
-        font-style: normal;
+      * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      body { letter-spacing: -0.02em; }
+      
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .modal-backdrop { backdrop-filter: blur(8px); background: rgba(0, 0, 0, 0.85); }
+      
+      .product-grid-item { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+      .product-grid-item:hover { transform: translateY(-2px); }
+      
+      .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+      .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+      
+      input:focus, select:focus, textarea:focus { outline: 3px solid #000; outline-offset: 0; }
+      
+      .spec-label { font-size: 9px; letter-spacing: 0.1em; }
+      
+      .price-tag { font-variant-numeric: tabular-nums; }
+      
+      @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      
+      .animate-marquee {
+        animation: marquee 20s linear infinite;
+      }
+      
+      .marquee-content {
+        display: inline-block;
+        padding-left: 100%;
       }
     </style>
   </head>
-  <body>
+  <body class="bg-white text-black font-sans" style="height: auto; min-height: 100%;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

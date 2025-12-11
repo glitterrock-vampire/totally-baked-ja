@@ -1,114 +1,175 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { getShopBySlug } from '../lib/sanity';
+import { useParams, Link } from 'react-router-dom';
+import { useSanityProducts } from '../hooks/useSanity';
 
-const ShopDetail = ({ addToCart }) => {
-  const { shopId } = useParams();
-  const [shop, setShop] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchShop = async () => {
-      try {
-        const shopData = await getShopBySlug(shopId);
-        setShop(shopData);
-      } catch (error) {
-        console.error('Error fetching shop:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (shopId) {
-      fetchShop();
-    }
-  }, [shopId]);
-
-  if (loading) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="text-center">Loading...</div>
-      </section>
-    );
-  }
-
-  if (!shop) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="text-center">Shop not found</div>
-      </section>
-    );
-  }
-
-  const Icon = () => {
-    switch (shop.icon) {
-      case 'star':
-        return <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full" />;
-      case 'coffee':
-        return <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full" />;
-      case 'leaf':
-        return <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full" />;
+const ShopDetail = ({ addToCart, shopId: propShopId }) => {
+  // Prefer explicit shopId prop, but fall back to URL param for /shop/:shopId
+  const { shopId: paramShopId } = useParams();
+  const shopId = propShopId || paramShopId;
+  const { products, loading, getImageUrl } = useSanityProducts();
+  
+  // Get products based on shopId - mirror logic from useSanityProducts (getProductsByCollectionType)
+  const getProductsForShop = (shopKey) => {
+    switch (shopKey) {
+      case 'herb-house':
+        // Herb House: primarily flower / pre-roll products
+        return products.filter(
+          (p) => (p.type === 'flower' || p.type === 'pre-roll') && p.inStock !== false
+        );
+      case 'delights-cafe':
+        // Delights: edibles + beverages
+        return products.filter(
+          (p) => ['edible', 'beverage'].includes(p.type) && p.inStock !== false
+        );
+      case 'collectibles':
+        // Collectibles: accessories
+        return products.filter(
+          (p) => p.type === 'accessory' && p.inStock !== false
+        );
       default:
-        return <div className="w-12 h-12 bg-gray-500 rounded-full" />;
+        // Generic shop: show everything in stock
+        return products.filter((p) => p.inStock !== false);
     }
   };
 
-  return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-      <Link
-        to="/"
-        className="mb-8 text-sm uppercase hover:text-green-600 transition-colors inline-block"
-      >
-        ← back to shops
-      </Link>
+  const shopProducts = getProductsForShop(shopId);
+  console.log('=== SHOP DETAIL DEBUG ===');
+  console.log('Raw shopId from URL:', shopId);
+  console.log('Type of shopId:', typeof shopId);
+  console.log('All products count:', products.length);
+  console.log('All products:', products.map(p => ({ name: p.name, category: p.category })));
+  console.log('Filtered products count:', shopProducts.length);
+  console.log('Filtered products:', shopProducts.map(p => ({ name: p.name, category: p.category })));
+  console.log('========================');
+  
+  const getShopInfo = (currentShopId) => {
+    switch (currentShopId) {
+      case 'herb-house':
+        return {
+          title: 'herb house',
+          subtitle: 'premium flower',
+          category: 'flower',
+          description: 'premium cannabis flower. strain-specific cultivation. lab tested for potency and purity.'
+        };
+      case 'delights-cafe':
+        return {
+          title: 'delights',
+          subtitle: 'edibles & more',
+          category: 'edibles',
+          description: 'precision-dosed edibles. consistent effects. gourmet ingredients. lab verified potency.'
+        };
+      case 'collectibles':
+        return {
+          title: 'collectibles',
+          subtitle: 'hardware & apparel',
+          category: 'hardware',
+          description: 'premium accessories and apparel. engineered for performance. designed for enthusiasts.'
+        };
+      default:
+        return {
+          title: 'shop',
+          subtitle: 'products',
+          category: 'general',
+          description: 'quality products for your needs.'
+        };
+    }
+  };
 
-      <div className="flex items-center gap-4 mb-12">
-        <Icon className="w-12 h-12" />
-        <h2 className="text-4xl sm:text-5xl font-bold uppercase">
-          {shop.name}
-        </h2>
-      </div>
+  const shopInfo = getShopInfo(shopId);
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {shop.products?.map((product, idx) => (
-          <div
-            key={product._id || idx}
-            className="border-2 border-black bg-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
-          >
-            <Link 
-              to={`/product/${product.slug?.current}`}
-              className="block"
-            >
-              <div className={`h-48 bg-gradient-to-br ${shop.color} opacity-20`} />
-            </Link>
-            <div className="p-6">
-              <div className="text-xs uppercase text-neutral-500 mb-2">
-                {product.type}
-              </div>
-              <h3 className="text-xl font-bold mb-4">
-                <Link 
-                  to={`/product/${product.slug?.current}`}
-                  className="hover:text-green-600 transition-colors"
-                >
-                  {product.name}
-                </Link>
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">
-                  ${product.price}
-                </span>
-                <button
-                  onClick={() => addToCart(product)}
-                  className="border border-black px-4 py-2 text-sm uppercase hover:bg-black hover:text-white transition-colors"
-                >
-                  add
-                </button>
-              </div>
-            </div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white text-black font-sans">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="font-mono text-sm uppercase tracking-wider opacity-50">loading</div>
           </div>
-        ))}
+        </div>
       </div>
-    </section>
+    );
+  }
+
+  return (
+    <div className="bg-white text-black font-sans" style={{ minHeight: '100vh' }}>
+      <div className="flex flex-col w-full">
+        {/* Shop Header */}
+        <section className="border-b-4 border-black bg-[#f5f5f5] p-8 lg:p-16">
+          {/* Orange highlight bar */}
+          <div className="h-2 bg-tb-orange mb-4" />
+          <div className="font-mono text-[10px] uppercase tracking-widest mb-4 opacity-50">category / {shopInfo.category}</div>
+          <div
+            className={
+              `font-mono text-[10px] uppercase tracking-widest mb-2 ` +
+              (shopId === 'delights-cafe'
+                ? 'text-tb-orange'
+                : 'opacity-30')
+            }
+          >
+            shop: {shopId}
+          </div>
+          <div className="font-mono text-[10px] uppercase tracking-widest mb-2 opacity-30">products: {shopProducts.length}</div>
+          <h1 className="text-6xl lg:text-8xl font-black lowercase mb-6">{shopInfo.title}</h1>
+          <p className="text-sm max-w-2xl font-light">{shopInfo.description}</p>
+        </section>
+
+        {/* Products Grid */}
+        <section className="border-b-4 border-black">
+          <div className="grid grid-cols-2 lg:grid-cols-4">
+            {shopProducts.map((product, idx) => (
+              <div
+                key={product._id || idx}
+                className="border-r-4 border-b-4 border-black group transition-all duration-200 hover:transform hover:-translate-y-0.5"
+              >
+                <Link
+                  to={`/product/${product.slug?.current || product._id}`}
+                  className="block cursor-pointer"
+                >
+                  <div className="aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group">
+                    <img
+                      src={getImageUrl(product.images?.[0])}
+                      alt={product.name}
+                      className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                    />
+                    <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
+                      <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">
+                        {product.category || product.type}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToCart(product);
+                        }}
+                        className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange"
+                      >
+                        <span className="text-xl leading-none">+</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white">
+                    <div className="font-bold text-sm lowercase mb-1">{product.name}</div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-xs opacity-50">
+                        {product.thc || product.weight || product.strain || 'premium'}
+                      </span>
+                      <span className="font-mono text-sm font-bold tabular-nums">${product.price}</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="p-6 text-center">
+          <div className="font-mono text-[9px] uppercase tracking-widest opacity-50">
+            © 2024 totally baked systems inc. / all rights reserved
+          </div>
+        </footer>
+      </div>
+
+          </div>
   );
 };
 

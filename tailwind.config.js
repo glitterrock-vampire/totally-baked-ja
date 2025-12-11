@@ -6,8 +6,13 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['"Courier New"', 'Courier', 'monospace'],
-        'fascinate': ['"Fascinate Inline"', 'system-ui'],
+        sans: ['"Archivo"', 'sans-serif'],
+        mono: ['"Roboto Mono"', 'monospace'],
+      },
+      colors: {
+        'tb-orange': '#ff6600',
+        'tb-green': '#00ff00',
+        'tb-yellow': '#ffff00',
       },
     },
   },

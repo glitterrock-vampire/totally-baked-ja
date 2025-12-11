@@ -24,6 +24,18 @@ const TotallyBaked = () => {
             element={<ShopPage cartCount={cartCount} addToCart={addToCart} />} 
           />
           <Route 
+            path="/herb-house" 
+            element={<ShopPage cartCount={cartCount} addToCart={addToCart} shopId="herb-house" />} 
+          />
+          <Route 
+            path="/delights-cafe" 
+            element={<ShopPage cartCount={cartCount} addToCart={addToCart} shopId="delights-cafe" />} 
+          />
+          <Route 
+            path="/collectibles" 
+            element={<ShopPage cartCount={cartCount} addToCart={addToCart} shopId="collectibles" />} 
+          />
+          <Route 
             path="/product/:productId" 
             element={<ProductPage cartCount={cartCount} addToCart={addToCart} />} 
           />

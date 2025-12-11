@@ -1,409 +1,627 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Leaf, Coffee, Star, ArrowRight } from 'lucide-react';
-import bg2 from '../assets/images/bg2.jpg';
-import bg5 from '../assets/images/bg5.jpg';
-import bg6 from '../assets/images/bg6.jpg';
-import bg7 from '../assets/images/bg7.jpg';
-import bg8 from '../assets/images/bg8.jpg';
-import bg9 from '../assets/images/bg9.jpg';
-import bg10 from '../assets/images/bg10.jpg';
-import bg11 from '../assets/images/bg11.jpg';
-import bg12 from '../assets/images/bg12.jpg';
-import bg13 from '../assets/images/bg13.jpg';
-import bg14 from '../assets/images/bg14.jpg';
-import bg15 from '../assets/images/bg15.jpg';
-import pexelsImage from '../assets/images/pexels-mfi97-606506.jpg';
-import bobMarleyVideo from '../assets/images/Bob Marley interview on Marijuana (Trench Town Kingston, Jamaica).mp4';
-
-const AnalogClock = () => {
-  const [rotation, setRotation] = useState({ hour: 0, minute: 0, second: 0 });
-
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      const hours = now.getHours() % 12;
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-      const milliseconds = now.getMilliseconds();
-      
-      // Calculate smooth rotations
-      const secondRotation = ((seconds + milliseconds / 1000) * 6); // 6 degrees per second
-      const minuteRotation = ((minutes + seconds / 60) * 6); // 6 degrees per minute
-      const hourRotation = ((hours + minutes / 60) * 30); // 30 degrees per hour
-      
-      setRotation({
-        hour: hourRotation,
-        minute: minuteRotation,
-        second: secondRotation
-      });
-    };
-
-    updateClock();
-    const animationFrame = requestAnimationFrame(function animate() {
-      updateClock();
-      requestAnimationFrame(animate);
-    });
-
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
-
-  return (
-    <div className="relative w-full h-full flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
-      {/* Clock Body */}
-      <div className="absolute inset-0 rounded-full bg-gray-100 border-4 border-gray-300 shadow-2xl">
-        {/* Inner shadow for depth */}
-        <div className="absolute inset-2 rounded-full bg-white shadow-inner"></div>
-        
-        {/* Clock Face Numbers */}
-        <div className="absolute inset-0">
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 text-gray-700 text-lg font-bold">12</div>
-          <div className="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-700 text-lg font-bold">3</div>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-gray-700 text-lg font-bold">6</div>
-          <div className="absolute top-1/2 left-2 transform -translate-y-1/2 text-gray-700 text-lg font-bold">9</div>
-        </div>
-
-        {/* Hour Markers */}
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-2 bg-gray-600"
-            style={{
-              top: '4px',
-              left: '50%',
-              transform: `translateX(-50%) rotate(${i * 30}deg)`,
-              transformOrigin: '50% 96px'
-            }}
-          />
-        ))}
-
-        {/* Center Dot */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-gray-800 rounded-full z-20"></div>
-
-        {/* Hour Hand */}
-        <div
-          className="absolute top-1/2 left-1/2 w-1 bg-gray-800 origin-bottom"
-          style={{
-            height: '60px',
-            transform: `translate(-50%, -100%) rotate(${rotation.hour}deg)`,
-            transition: 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
-          }}
-        />
-
-        {/* Minute Hand */}
-        <div
-          className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 origin-bottom"
-          style={{
-            height: '80px',
-            transform: `translate(-50%, -100%) rotate(${rotation.minute}deg)`,
-            transition: 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
-          }}
-        />
-
-        {/* Second Hand */}
-        <div
-          className="absolute top-1/2 left-1/2 w-0.5 bg-yellow-500 origin-bottom"
-          style={{
-            height: '90px',
-            transform: `translate(-50%, -100%) rotate(${rotation.second}deg)`,
-            transition: 'transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1)'
-          }}
-        >
-          {/* Second hand counterweight */}
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-yellow-500 rounded-full"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useSanityProducts } from '../hooks/useSanity';
+import MarleyVideo from '../assets/images/Bob Marley interview on Marijuana (Trench Town Kingston, Jamaica).mp4';
 
 const VisualCollageHome = () => {
+  const location = useLocation();
+  console.log('Current pathname:', location.pathname);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [ageVerified, setAgeVerified] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quickViewQuantity, setQuickViewQuantity] = useState(1);
+  const [cart, setCart] = useState([]);
+
+  // Fetch products from Sanity
+  const {
+    products,
+    shops,
+    homepage,
+    collections,
+    loading,
+    error,
+    featuredProduct,
+    herbProducts,
+    delightProducts,
+    collectibleProducts,
+    mostSoldItems,
+    tickerMessages,
+    categorySections,
+    getImageUrl
+  } = useSanityProducts();
+
+  // Effects
+  useEffect(() => {
+    const storedCart = localStorage.getItem('tb-cart');
+    const storedAge = localStorage.getItem('tb-age-verified');
+    if (storedCart) setCart(JSON.parse(storedCart));
+    if (storedAge === 'true') {
+      setAgeVerified(true);
+    } else {
+      setAgeVerified(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tb-cart', JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    if (!newsletterSuccess) return;
+    const timer = setTimeout(() => setNewsletterSuccess(false), 3000);
+    return () => clearTimeout(timer);
+  }, [newsletterSuccess]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closeAll();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Computed values
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+
+  // Functions
+  const closeAll = useCallback(() => {
+    setCartOpen(false);
+    setQuickViewOpen(false);
+    setMobileMenuOpen(false);
+  }, []);
+
+  const navigateTo = (page) => {
+    setCurrentPage(page);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const verifyAge = (verified) => {
+    if (verified) {
+      setAgeVerified(true);
+      localStorage.setItem('tb-age-verified', 'true');
+    } else {
+      window.location.href = 'https://www.google.com';
+    }
+  };
+
+  const addToCart = (product, quantity = 1) => {
+    if (!product || !product._id) return;
+    
+    setCart((prev) => {
+      const index = prev.findIndex((item) => item._id === product._id);
+      if (index >= 0) {
+        const next = [...prev];
+        next[index] = { ...next[index], quantity: next[index].quantity + quantity };
+        return next;
+      }
+      return [...prev, { ...product, quantity }];
+    });
+  };
+
+  const updateQuantity = (index, delta) => {
+    setCart((prev) => {
+      const next = [...prev];
+      next[index].quantity += delta;
+      if (next[index].quantity <= 0) next.splice(index, 1);
+      return next;
+    });
+  };
+
+  const removeFromCart = (index) => {
+    setCart((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const openQuickView = (product) => {
+    setSelectedProduct(product);
+    setQuickViewQuantity(1);
+    setQuickViewOpen(true);
+  };
+
+  const addToCartFromQuickView = () => {
+    if (!selectedProduct) return;
+    addToCart(selectedProduct, quickViewQuantity);
+    setQuickViewOpen(false);
+    setQuickViewQuantity(1);
+    setCartOpen(true);
+  };
+
+  const submitNewsletter = (event) => {
+    event.preventDefault();
+    if (!newsletterEmail) return;
+    setNewsletterSuccess(true);
+    setNewsletterEmail('');
+  };
+
+  const checkout = () => {
+    alert(`checkout: $${cartTotal.toFixed(2)}`);
+  };
+
   return (
-    <div className="bg-white">
-      {/* Hero Collage Section */}
-      <section className="relative min-h-screen flex items-center justify-center py-16">
-        {/* Background Grid Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="grid grid-cols-12 h-full">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="border-r border-black"></div>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Collage Container */}
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 relative">
-            
-            {/* Background Image Element - positioned near lab tested */}
-            <div className="absolute bottom-0 left-1/4 lg:left-1/3 w-32 h-32 lg:w-48 lg:h-48 opacity-30 rounded-lg overflow-hidden z-0">
-              <img src={bg7} alt="Background" className="w-full h-full object-cover" />
+    <div className="bg-white text-black font-sans" style={{ minHeight: '100vh' }}>
+      <div className="flex flex-col w-full">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-white border-b-4 border-black">
+          <div className="flex items-stretch">
+            <div className="w-48 border-r-4 border-black p-4 flex items-center">
+              <button type="button" onClick={() => navigateTo('home')} className="text-xl font-black lowercase tracking-tight hover:opacity-60 transition-opacity">
+                totally baked
+              </button>
             </div>
-            
-            {/* Large Feature Image - Top Left */}
-            <div className="col-span-2 md:col-span-3 lg:col-span-4 row-span-2 relative group z-10">
-              <div className="aspect-[4/3] md:aspect-square rounded-lg overflow-hidden relative">
-                <img src={bg2} alt="Herb House" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="text-center p-4 md:p-8 w-full">
-                    <Leaf className="w-12 h-12 md:w-20 md:h-20 text-white mx-auto mb-3 md:mb-4" />
-                    <h3 className="text-xl md:text-3xl font-fascinate text-white mb-2">
-                      herb house
-                    </h3>
-                    <p className="text-white/90 text-xs md:text-sm mb-4 md:mb-6">premium cannabis experience</p>
-                    <Link 
-                      to="/shop/herb-house"
-                      className="inline-flex items-center gap-2 border-2 border-white px-3 py-2 md:px-4 text-white hover:bg-white hover:text-black transition-colors text-sm"
-                    >
-                      explore
-                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-                    </Link>
+            <nav className="hidden lg:flex flex-1">
+              {[{ label: 'herb house', page: 'herb' }, { label: 'delights', page: 'delights' }, { label: 'collectibles', page: 'collectibles' }].map((nav) => {
+                const shopUrl = `/shop/${nav.page === 'herb' ? 'herb-house' : nav.page === 'delights' ? 'delights-cafe' : 'collectibles'}`;
+                const isActive = location.pathname === shopUrl;
+                return (
+                <Link 
+                  key={nav.page}
+                  to={shopUrl}
+                  className={`flex-1 flex items-center justify-center border-r-4 border-black text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors ${isActive ? 'bg-black text-white' : ''}`}
+                >
+                  {nav.label}
+                </Link>
+                );
+              })}
+            </nav>
+            <button type="button" onClick={() => setCartOpen(true)} className="w-20 border-l-4 border-black flex items-center justify-center hover:bg-tb-orange hover:text-white transition-colors relative">
+              <span className="font-mono text-lg font-bold">{cartCount}</span>
+              {cartCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-tb-orange rounded-full" />}
+            </button>
+            <button type="button" onClick={() => setMobileMenuOpen((prev) => !prev)} className="lg:hidden w-16 border-l-4 border-black flex items-center justify-center hover:bg-gray-100">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <path strokeLinecap="square" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          {mobileMenuOpen && (
+            <nav className="lg:hidden border-t-4 border-black">
+              {[{ label: 'herb house', page: 'herb' }, { label: 'delights', page: 'delights' }, { label: 'collectibles', page: 'collectibles' }].map((nav, idx) => {
+                const shopUrl = `/shop/${nav.page === 'herb' ? 'herb-house' : nav.page === 'delights' ? 'delights-cafe' : 'collectibles'}`;
+                const isActive = location.pathname === shopUrl;
+                return (
+                <Link 
+                  key={nav.page}
+                  to={shopUrl}
+                  className={`block w-full text-left px-6 py-4 ${idx < 2 ? 'border-b-4 border-black' : ''} text-xs font-bold uppercase hover:bg-gray-100 ${isActive ? 'bg-black text-white' : ''}`}
+                >
+                  {nav.label}
+                </Link>
+                );
+              })}
+            </nav>
+          )}
+        </header>
+
+        {/* HOME PAGE */}
+        {currentPage === 'home' && (
+          <>
+            {/* Hero */}
+            <section className="border-b-4 border-black">
+              <div className="grid grid-cols-1 lg:grid-cols-12">
+                <div className="lg:col-span-8 p-8 lg:p-16 border-b-4 lg:border-b-0 lg:border-r-4 border-black min-h-[500px] flex flex-col justify-between bg-[#f5f5f5]">
+                  <div className="mb-12">
+                    <div className="font-mono text-[10px] uppercase tracking-widest mb-6 opacity-50">system online / v4.20</div>
+                    <h1 className="text-7xl lg:text-9xl font-black lowercase leading-[0.85] mb-8">
+                    {(homepage?.heroHeadline || 'precision\nengineered\ncannabis').split('\n').map((line, idx) => (
+                      <React.Fragment key={idx}>
+                        {line}
+                        {idx < 2 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </h1>
+                  </div>
+                  <div className="max-w-md">
+                    <p className="text-sm leading-relaxed mb-8 font-light">{homepage?.heroDescription || 'we design botanical experiences with industrial precision. our products are calibrated for optimal performance. no fillers. no compromises.'}</p>
+                    <Link to="/shop/herb-house" className="inline-block bg-black text-white px-8 py-4 text-xs font-bold uppercase tracking-wider hover:bg-tb-orange transition-colors">explore products</Link>
+                  </div>
+                </div>
+                {featuredProduct && (
+                  <button type="button" onClick={() => openQuickView(featuredProduct)} className="lg:col-span-4 relative overflow-hidden group cursor-pointer min-h-[400px]">
+                    <img src={getImageUrl(featuredProduct.images?.[0])} alt={featuredProduct.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                    <div className="absolute bottom-0 left-0 w-full p-6 bg-white/95 border-t-4 border-black">
+                      <div className="font-mono text-[10px] uppercase tracking-widest mb-2 opacity-50">featured</div>
+                      <div className="font-bold text-xl lowercase mb-1">{featuredProduct.name}</div>
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span>{featuredProduct.thc || featuredProduct.weight || 'premium'}</span>
+                        <span className="font-bold">${featuredProduct.price}</span>
+                      </div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* Ticker */}
+            <div className="border-b-4 border-black bg-tb-orange text-black py-2 overflow-hidden">
+              <div className="whitespace-nowrap animate-marquee">
+                {tickerMessages.map((text, idx) => (
+                  <span key={idx} className="inline-block font-mono text-xs font-bold uppercase tracking-widest px-8">{text}</span>
+                ))}
+                {tickerMessages.map((text, idx) => (
+                  <span key={`repeat-${idx}`} className="inline-block font-mono text-xs font-bold uppercase tracking-widest px-8">{text}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Categories */}
+            <section className="border-b-4 border-black">
+              <div className="grid grid-cols-1 md:grid-cols-3">
+                {categorySections.map((cat, idx) => (
+                  <Link
+                    key={cat.slug?.current || idx}
+                    to={`/shop/${cat.slug?.current || 'herb-house'}`}
+                    className={`category-card p-12 text-center hover:bg-black hover:text-white transition-colors cursor-pointer group border-black ${idx < 2 ? 'border-b-4 md:border-b-0' : ''} ${idx !== 2 ? 'md:border-r-4' : ''}`}
+                  >
+                    <div className="category-icon mb-6 flex justify-center">
+                      <svg className="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {cat.icon === 'leaf' && <path d="M50 10 C30 20, 20 35, 25 50 C20 35, 15 25, 10 30 C15 40, 20 55, 30 65 M50 10 C70 20, 80 35, 75 50 C80 35, 85 25, 90 30 C85 40, 80 55, 70 65 M50 10 L50 90 M30 65 C35 75, 42 85, 50 90 M70 65 C65 75, 58 85, 50 90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+                        {cat.icon === 'coffee' && <><rect x="30" y="20" width="40" height="50" rx="5" stroke="currentColor" strokeWidth="2.5" /><path d="M35 30 L65 30 M35 40 L65 40 M35 50 L65 50 M35 60 L65 60" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><circle cx="50" cy="80" r="8" stroke="currentColor" strokeWidth="2.5" /><path d="M50 72 L50 20 M50 20 L45 25 M50 20 L55 25" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></>}
+                        {cat.icon === 'star' && <><circle cx="50" cy="35" r="20" stroke="currentColor" strokeWidth="2.5" /><circle cx="50" cy="35" r="12" stroke="currentColor" strokeWidth="2.5" /><path d="M30 35 L20 35 M70 35 L80 35 M50 15 L50 5 M50 55 L50 65" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><rect x="35" y="65" width="30" height="25" rx="3" stroke="currentColor" strokeWidth="2.5" /><path d="M42 75 L58 75 M42 82 L58 82" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></>}
+                        {!cat.icon && <circle cx="50" cy="50" r="25" stroke="currentColor" strokeWidth="2.5" />}
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-black lowercase mb-2">{cat.title}</h3>
+                    <p className="text-xs font-mono uppercase tracking-wider opacity-50 group-hover:opacity-100">{cat.subtitle}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            {/* Most Sold */}
+            <section className="border-b-4 border-black">
+              <div className="p-8 lg:p-12 bg-[#f5f5f5] border-b-4 border-black">
+                <div className="font-mono text-[10px] uppercase tracking-widest mb-4 opacity-50">best sellers</div>
+                <h2 className="text-4xl lg:text-5xl font-black lowercase">most sold items</h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4">
+                {mostSoldItems && mostSoldItems.map((product) => (
+                  <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
+                    <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
+                        <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
+                          <span className="text-xl leading-none">+</span>
+                        </button>
+                      </div>
+                      <div className="absolute top-3 right-3 bg-tb-orange text-black px-2 py-1 text-[9px] font-bold uppercase">best seller</div>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <div className="font-bold text-sm lowercase mb-1">{product.name}</div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-xs opacity-50">{product.thc || product.weight || product.strain || 'premium'}</span>
+                        <span className="font-mono text-sm font-bold price-tag">${product.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Video */}
+            <section className="border-b-4 border-black bg-black">
+              <div className="w-full px-0 lg:px-0">
+                <video
+                  src={MarleyVideo}
+                  className="w-full h-auto"
+                  controls
+                />
+              </div>
+            </section>
+
+            {/* Newsletter */}
+            <section className="border-b-4 border-black">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="p-8 lg:p-16 border-b-4 lg:border-b-0 lg:border-r-4 border-black bg-black text-white">
+                  <div className="font-mono text-[10px] uppercase tracking-widest mb-6 opacity-50">newsletter</div>
+                  <h3 className="text-4xl font-black lowercase mb-6">join the lab</h3>
+                  <p className="text-sm mb-8 font-light">subscribe for product drops, system updates, and experimental releases.</p>
+                  <form onSubmit={submitNewsletter} className="flex border-4 border-white">
+                    <input type="email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} placeholder="email address" required className="bg-transparent text-white px-4 py-3 w-full text-sm lowercase focus:outline-none placeholder-gray-500" />
+                    <button type="submit" className="bg-white text-black px-6 py-3 text-xs font-bold uppercase hover:bg-tb-orange hover:text-white transition-colors">submit</button>
+                  </form>
+                  {newsletterSuccess && <p className="mt-4 text-xs font-mono text-tb-green">✓ subscription confirmed</p>}
+                </div>
+                <div className="p-8 lg:p-16 bg-[#f5f5f5]">
+                  <div className="font-mono text-[10px] uppercase tracking-widest mb-6 opacity-50">information</div>
+                  <div className="grid grid-cols-2 gap-8 mb-12">
+                    <div>
+                      <h4 className="font-bold text-xs uppercase mb-3 tracking-wider">support</h4>
+                      <ul className="text-xs space-y-2 font-light">
+                        <li><a href="#" className="hover:underline">shipping</a></li>
+                        <li><a href="#" className="hover:underline">returns</a></li>
+                        <li><a href="#" className="hover:underline">faq</a></li>
+                        <li><a href="#" className="hover:underline">contact</a></li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs uppercase mb-3 tracking-wider">legal</h4>
+                      <ul className="text-xs space-y-2 font-light">
+                        <li><a href="#" className="hover:underline">terms</a></li>
+                        <li><a href="#" className="hover:underline">privacy</a></li>
+                        <li><a href="#" className="hover:underline">compliance</a></li>
+                        <li><a href="#" className="hover:underline">age verify</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="text-xs font-mono opacity-50">
+                    <div className="mb-1">california, usa</div>
+                    <div>34.0522°n / 118.2437°w</div>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
+          </>
+        )}
 
-            {/* Small Feature - Top Right */}
-            <div className="col-span-2 md:col-span-1 lg:col-span-2 relative group z-10">
-              <div className="aspect-square rounded-lg overflow-hidden relative">
-                <img src={bg5} alt="Delights Café" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="text-center p-3 md:p-4 w-full">
-                    <Coffee className="w-8 h-8 md:w-12 md:h-12 text-white mx-auto mb-2" />
-                    <h4 className="text-sm md:text-lg font-fascinate text-white mb-1">
-                      delights
-                    </h4>
-                    <p className="text-white/90 text-xs mb-2">edibles & drinks</p>
-                    <Link 
-                      to="/shop/delights-cafe"
-                      className="text-white hover:text-gray-200 text-xs font-semibold"
-                    >
-                      discover →
-                    </Link>
+        {/* HERB PAGE */}
+        {currentPage === 'herb' && (
+          <section className="border-b-4 border-black">
+            <div className="p-8 lg:p-16 bg-[#f5f5f5] border-b-4 border-black">
+              <div className="font-mono text-[10px] uppercase tracking-widest mb-4 opacity-50">category / flower</div>
+              <h1 className="text-6xl lg:text-8xl font-black lowercase mb-6">herb house</h1>
+              <p className="text-sm max-w-2xl font-light">premium cannabis flower. strain-specific cultivation. lab tested for potency and purity.</p>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <p className="text-sm font-mono">Loading products...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4">
+                {herbProducts.map((product) => (
+                  <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
+                    <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
+                        <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
+                          <span className="text-xl leading-none">+</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <div className="font-bold text-sm lowercase mb-1">{product.name}</div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-xs opacity-50">{product.thc || product.weight || product.strain || 'premium'}</span>
+                        <span className="font-mono text-sm font-bold price-tag">${product.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* DELIGHTS PAGE */}
+        {currentPage === 'delights' && (
+          <section className="border-b-4 border-black">
+            <div className="p-8 lg:p-16 bg-[#f5f5f5] border-b-4 border-black">
+              <div className="font-mono text-[10px] uppercase tracking-widest mb-4 opacity-50">category / edibles</div>
+              <h1 className="text-6xl lg:text-8xl font-black lowercase mb-6">delights</h1>
+              <p className="text-sm max-w-2xl font-light">precision-dosed edibles. consistent effects. gourmet ingredients. lab verified potency.</p>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <p className="text-sm font-mono">Loading products...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4">
+                {delightProducts.map((product) => (
+                  <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
+                    <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
+                        <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
+                          <span className="text-xl leading-none">+</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <div className="font-bold text-sm lowercase mb-1">{product.name}</div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-xs opacity-50">{product.thc || product.weight || product.strain || 'premium'}</span>
+                        <span className="font-mono text-sm font-bold price-tag">${product.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* COLLECTIBLES PAGE */}
+        {currentPage === 'collectibles' && (
+          <section className="border-b-4 border-black">
+            <div className="p-8 lg:p-16 bg-[#f5f5f5] border-b-4 border-black">
+              <div className="font-mono text-[10px] uppercase tracking-widest mb-4 opacity-50">category / hardware</div>
+              <h1 className="text-6xl lg:text-8xl font-black lowercase mb-6">collectibles</h1>
+              <p className="text-sm max-w-2xl font-light">premium accessories and apparel. engineered for performance. designed for enthusiasts.</p>
+            </div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <p className="text-sm font-mono">Loading products...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4">
+                {collectibleProducts.map((product) => (
+                  <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
+                    <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
+                        <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
+                          <span className="text-xl leading-none">+</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <div className="font-bold text-sm lowercase mb-1">{product.name}</div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-xs opacity-50">{product.thc || product.weight || product.strain || 'premium'}</span>
+                        <span className="font-mono text-sm font-bold price-tag">${product.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Footer */}
+        <footer className="p-6 text-center">
+          <div className="font-mono text-[9px] uppercase tracking-widest opacity-50">
+            © 2024 totally baked systems inc. / all rights reserved
+          </div>
+        </footer>
+      </div>
+
+      {/* Cart Sidebar */}
+      {cartOpen && (
+        <div onClick={() => setCartOpen(false)} className="fixed inset-0 z-[100] modal-backdrop">
+          <div onClick={(e) => e.stopPropagation()} className="absolute right-0 top-0 h-full w-full md:w-[450px] bg-white border-l-4 border-black flex flex-col">
+            <div className="border-b-4 border-black p-6 flex justify-between items-center">
+              <h3 className="text-xl font-black lowercase">cart <span className="font-mono text-sm">({cart.length})</span></h3>
+              <button type="button" onClick={() => setCartOpen(false)} className="w-10 h-10 border-4 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                <span className="text-xl leading-none">×</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {cart.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-sm mb-6 opacity-50">cart is empty</p>
+                  <Link to="/shop/herb-house" onClick={() => setCartOpen(false)} className="bg-black text-white px-6 py-3 text-xs font-bold uppercase hover:bg-tb-orange transition-colors block text-center">
+                    start shopping
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item, index) => (
+                    <div key={index} className="border-4 border-black p-4 flex gap-4 hover:bg-gray-50 transition-colors">
+                      <img src={getImageUrl(item.images?.[0])} alt={item.name} className="w-20 h-20 object-cover border-2 border-black" />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-sm lowercase mb-1">{item.name}</h4>
+                        <p className="text-[10px] font-mono uppercase mb-2 opacity-50">{item.category}</p>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => updateQuantity(index, -1)} className="w-6 h-6 border-2 border-black flex items-center justify-center text-xs font-bold hover:bg-black hover:text-white">-</button>
+                          <span className="font-mono text-sm w-8 text-center">{item.quantity}</span>
+                          <button type="button" onClick={() => updateQuantity(index, 1)} className="w-6 h-6 border-2 border-black flex items-center justify-center text-xs font-bold hover:bg-black hover:text-white">+</button>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col justify-between">
+                        <button type="button" onClick={() => removeFromCart(index)} className="text-xs opacity-50 hover:opacity-100">×</button>
+                        <span className="font-mono font-bold text-sm">${(item.price * item.quantity).toFixed(0)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="border-t-4 border-black p-6 bg-gray-50">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-black">
+                <span className="text-xs font-bold uppercase tracking-wider">total</span>
+                <span className="font-mono font-bold text-2xl">${cartTotal.toFixed(0)}</span>
+              </div>
+              <button type="button" onClick={checkout} className="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-wider hover:bg-tb-orange transition-colors mb-2">
+                checkout
+              </button>
+              <button type="button" onClick={() => setCartOpen(false)} className="w-full border-4 border-black py-4 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors">
+                continue shopping
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick View Modal */}
+      {quickViewOpen && selectedProduct && (
+        <div onClick={() => setQuickViewOpen(false)} className="fixed inset-0 z-[110] modal-backdrop flex items-center justify-center p-4">
+          <div onClick={(e) => e.stopPropagation()} className="bg-white border-4 border-black max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="border-b-4 border-black p-4 flex justify-between items-center sticky top-0 bg-white z-10">
+              <span className="font-mono text-[10px] uppercase tracking-widest">quick view</span>
+              <button type="button" onClick={() => setQuickViewOpen(false)} className="w-10 h-10 border-4 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                <span className="text-xl leading-none">×</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="border-b-4 md:border-b-0 md:border-r-4 border-black p-8 bg-gray-50 flex items-center justify-center">
+                <img src={getImageUrl(selectedProduct.images?.[0])} alt={selectedProduct.name} className="max-w-full h-auto max-h-[400px] object-contain" />
+              </div>
+              <div className="p-8">
+                <span className="inline-block bg-black text-white text-[9px] font-bold uppercase tracking-wider px-2 py-1 mb-4">{selectedProduct.category || selectedProduct.type}</span>
+                <h2 className="text-3xl font-black lowercase mb-2">{selectedProduct.name}</h2>
+                <p className="text-sm mb-6 font-light">{selectedProduct.description}</p>
+                <div className="border-t-2 border-b-2 border-black py-4 my-6 font-mono text-xs">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="spec-label block opacity-50 mb-1">SPECIFICATION</span>
+                      <span className="font-bold">{selectedProduct.thc || selectedProduct.weight || 'premium'}</span>
+                    </div>
+                    <div>
+                      <span className="spec-label block opacity-50 mb-1">CATEGORY</span>
+                      <span className="font-bold">{selectedProduct.category || selectedProduct.type}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Analog Clock - positioned to the right of delights */}
-            <div className="col-span-2 md:col-span-1 lg:col-span-2 lg:col-start-5 relative z-10">
-              <div className="aspect-square flex items-center justify-center">
-                <AnalogClock />
-              </div>
-            </div>
-
-            {/* Medium Feature - Middle Left */}
-            <div className="col-span-2 md:col-span-2 lg:col-span-3 relative group z-10">
-              <div className="aspect-[4/3] md:aspect-square rounded-lg overflow-hidden relative">
-                <img src={bg6} alt="Collectibles" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="text-center p-4 md:p-6 w-full">
-                    <Star className="w-8 h-8 md:w-12 md:h-12 text-white mx-auto mb-2" />
-                    <h4 className="text-sm md:text-xl font-fascinate text-white mb-1">
-                      collectibles
-                    </h4>
-                    <p className="text-white/90 text-xs md:text-sm mb-3">gear & accessories</p>
-                    <Link 
-                      to="/shop/collectibles"
-                      className="text-white hover:text-gray-200 text-xs font-semibold"
-                    >
-                      shop now →
-                    </Link>
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-3xl font-mono font-bold price-tag">${selectedProduct.price}</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setQuickViewQuantity(Math.max(1, quickViewQuantity - 1))} className="w-10 h-10 border-4 border-black flex items-center justify-center text-sm font-bold hover:bg-black hover:text-white">-</button>
+                    <span className="font-mono w-12 text-center">{quickViewQuantity}</span>
+                    <button type="button" onClick={() => setQuickViewQuantity(quickViewQuantity + 1)} className="w-10 h-10 border-4 border-black flex items-center justify-center text-sm font-bold hover:bg-black hover:text-white">+</button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Quote/Text Block - Middle Right */}
-            <div className="col-span-2 md:col-span-2 lg:col-span-3 relative z-10">
-              <div className="aspect-[4/3] md:aspect-square bg-black text-white rounded-lg p-4 md:p-6 flex flex-col justify-center">
-                <h2 className="text-lg md:text-2xl lg:text-3xl font-fascinate mb-2 md:mb-4">
-                  totally
-                  <br />
-                  <span className="text-green-400">baked</span>
-                </h2>
-                <p className="text-xs md:text-sm text-gray-300 mb-3 md:mb-4 leading-relaxed">
-                  Curated cannabis experiences for the modern connoisseur.
-                </p>
-                <div className="flex flex-wrap gap-1 md:gap-2">
-                  <span className="px-2 py-1 border border-green-400 text-green-400 text-xs rounded-full">
-                    premium
-                  </span>
-                  <span className="px-2 py-1 border border-green-400 text-green-400 text-xs rounded-full">
-                    artisanal
-                  </span>
-                  <span className="px-2 py-1 border border-green-400 text-green-400 text-xs rounded-full">
-                    curated
-                  </span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Floating Elements */}
-        <div className="absolute top-10 right-10 w-20 h-20 bg-green-500 rounded-full opacity-10 blur-xl"></div>
-        <div className="absolute bottom-20 left-10 w-32 h-32 bg-orange-500 rounded-full opacity-10 blur-xl"></div>
-        <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-purple-500 rounded-full opacity-10 blur-xl"></div>
-      </section>
-
-      {/* Extended Visual Section */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            <div className="aspect-[4/3] bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg p-8 flex flex-col justify-center">
-              <Leaf className="w-12 h-12 text-green-700 mb-4" />
-              <h3 className="text-xl font-fascinate text-green-900 mb-3">Premium Quality</h3>
-              <p className="text-sm text-gray-600">
-                Every product is carefully selected and tested to ensure the highest standards of excellence and purity.
-              </p>
-            </div>
-            <div className="aspect-[4/3] bg-gradient-to-br from-orange-50 to-amber-100 rounded-lg p-8 flex flex-col justify-center">
-              <Coffee className="w-12 h-12 text-orange-700 mb-4" />
-              <h3 className="text-xl font-fascinate text-orange-900 mb-3">Community First</h3>
-              <p className="text-sm text-gray-600">
-                Building a community of cannabis enthusiasts who appreciate excellence and share our passion.
-              </p>
-            </div>
-            <div className="aspect-[4/3] bg-gradient-to-br from-purple-50 to-pink-100 rounded-lg p-8 flex flex-col justify-center">
-              <Star className="w-12 h-12 text-purple-700 mb-4" />
-              <h3 className="text-xl font-fascinate text-purple-900 mb-3">Innovation</h3>
-              <p className="text-sm text-gray-600">
-                Pushing boundaries with new products and experiences that delight and inspire our customers.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Story Section */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 relative">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img src={pexelsImage} alt="Story Background" className="w-full h-full object-cover object-left" />
-          <div className="absolute inset-0 bg-white/90"></div>
-        </div>
-        
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-fascinate mb-12">
-            our story
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16 mb-16">
-            <div className="text-left">
-              <h3 className="text-2xl md:text-3xl font-fascinate mb-6">quality</h3>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                Every product is carefully selected and tested to ensure the highest standards. 
-                We work directly with trusted growers and manufacturers to guarantee that every 
-                item meets our rigorous quality requirements. From seed to sale, we maintain 
-                complete control over the supply chain.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="text-2xl md:text-3xl font-fascinate mb-6">community</h3>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                Building a community of cannabis enthusiasts who appreciate excellence. 
-                We host events, workshops, and gatherings that bring people together to share 
-                knowledge and experiences. Our community is built on trust, education, and 
-                mutual respect for the plant and its benefits.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="text-2xl md:text-3xl font-fascinate mb-6">innovation</h3>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                Pushing boundaries with new products and experiences for our customers. 
-                Our team is constantly exploring new strains, consumption methods, and 
-                product formulations. We believe in evolving with the industry while 
-                maintaining our commitment to quality and safety.
-              </p>
-            </div>
-          </div>
-          <div className="pt-8">
-            <Link 
-              to="/store"
-              className="inline-block border-2 border-black px-8 py-4 text-sm font-bold hover:bg-black hover:text-white transition-colors"
-            >
-              visit the store
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Video Section */}
-      <section className="w-full">
-        <div className="relative w-full h-96 md:h-screen">
-          <video 
-            className="w-full h-full object-cover"
-            controls
-            loop
-            playsInline
-          >
-            <source src={bobMarleyVideo} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      </section>
-
-      {/* Extended Collage Gallery */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-black text-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-fascinate mb-16 text-center">
-            explore our world
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="aspect-square rounded-lg overflow-hidden relative group">
-              <img src={bg12} alt="Collection 1" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                <p className="text-white text-xs p-4 font-semibold">strains</p>
-              </div>
-            </div>
-            <div className="aspect-square rounded-lg overflow-hidden relative group">
-              <img src={bg13} alt="Collection 2" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                <p className="text-white text-xs p-4 font-semibold">artisans</p>
-              </div>
-            </div>
-            <div className="aspect-square rounded-lg overflow-hidden relative group">
-              <img src={bg14} alt="Collection 3" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                <p className="text-white text-xs p-4 font-semibold">creations</p>
-              </div>
-            </div>
-            <div className="aspect-square rounded-lg overflow-hidden relative group">
-              <img src={bg15} alt="Collection 4" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                <p className="text-white text-xs p-4 font-semibold">essence</p>
+                <button type="button" onClick={addToCartFromQuickView} className="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-wider hover:bg-tb-orange transition-colors mb-2">
+                  add to cart
+                </button>
+                <button type="button" onClick={() => setQuickViewOpen(false)} className="w-full border-4 border-black py-4 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors">
+                  continue shopping
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* Final Call to Action */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-green-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-fascinate mb-8">
-            join the experience
-          </h2>
-          <p className="text-xl mb-12 opacity-90">
-            Discover premium cannabis products crafted with care and precision.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/store"
-              className="inline-block border-2 border-white px-8 py-4 text-sm font-bold hover:bg-white hover:text-green-600 transition-colors"
-            >
-              shop now
-            </Link>
-            <Link 
-              to="/shop/herb-house"
-              className="inline-block border-2 border-white px-8 py-4 text-sm font-bold hover:bg-white hover:text-green-600 transition-colors"
-            >
-              learn more
-            </Link>
+      {/* Age Verification - Always on top */}
+      {!ageVerified && (
+        <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+          <div className="bg-white border-4 border-black max-w-md w-full p-12 text-center" style={{ pointerEvents: 'auto' }}>
+            <h2 className="text-4xl font-black lowercase mb-6">age verification</h2>
+            <p className="text-sm mb-8 font-light">you must be 21+ to access this site</p>
+            <div className="flex gap-4">
+              <button type="button" onClick={() => verifyAge(true)} className="flex-1 bg-black text-white py-4 text-xs font-bold uppercase hover:bg-tb-orange transition-colors">
+                i'm 21+
+              </button>
+              <button type="button" onClick={() => verifyAge(false)} className="flex-1 border-4 border-black py-4 text-xs font-bold uppercase hover:bg-gray-100 transition-colors">
+                exit
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      )}
+
+      <style>{`
+        .modal-backdrop { backdrop-filter: blur(8px); background: rgba(0, 0, 0, 0.85); }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .product-grid-item { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .product-grid-item:hover { transform: translateY(-2px); }
+        .category-icon { transition: all 0.3s ease; }
+        .category-card:hover .category-icon { transform: scale(1.1); }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .animate-marquee { animation: marquee 20s linear infinite; }
+      `}</style>
     </div>
   );
 };
