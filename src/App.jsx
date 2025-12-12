@@ -3,14 +3,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.jsx';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
-import StorePage from './pages/StorePage';
-import CheckoutPage from './pages/CheckoutPage';
 import ProductPage from './pages/ProductPage';
+import StorePage from './pages/StorePage';
+import ShopDetail from './components/ShopDetail';
+import CheckoutPage from './pages/CheckoutPage';
 import DownloadsPage from './pages/DownloadsPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OrderHistory from './pages/OrderHistory';
-import { useCart } from './hooks/useCart';
+import OrderConfirmation from './pages/OrderConfirmation';
+import { useCart } from './hooks/useCart.js';
 
 const AppContent = () => {
   const { cartCount, cartItems, cartTotal, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -73,6 +75,10 @@ const AppContent = () => {
         <Route 
           path="/orders" 
           element={<OrderHistory />} 
+        />
+        <Route 
+          path="/order-confirmation" 
+          element={<OrderConfirmation />} 
         />
       </Routes>
     </div>

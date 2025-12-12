@@ -133,9 +133,8 @@ const CheckoutPage = ({ cartCount, cartItems, removeFromCart, updateQuantity, cl
       // Clear cart after successful order
       await clearCart();
       
-      // Navigate to order confirmation or success page
-      alert(`Order placed successfully! Order #${order.orderNumber}`);
-      navigate('/');
+      // Navigate to order confirmation page with order details
+      navigate('/order-confirmation', { state: { order } });
       
     } catch (error) {
       console.error('Error placing order:', error);

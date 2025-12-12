@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSanityProducts } from '../hooks/useSanity';
+import { useAuth } from '../hooks/useAuth.jsx';
 import MarleyVideo from '../assets/images/Bob Marley interview on Marijuana (Trench Town Kingston, Jamaica).mp4';
 
 const VisualCollageHome = () => {
   const location = useLocation();
   console.log('Current pathname:', location.pathname);
+  const { user, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [ageVerified, setAgeVerified] = useState(false);
@@ -169,6 +172,55 @@ const VisualCollageHome = () => {
                 );
               })}
             </nav>
+            <div className="hidden lg:flex items-center border-l-4 border-black relative">
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="px-4 text-xs font-medium hover:text-tb-orange transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Profile</span>
+              </button>
+              
+              {profileDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border-2 border-black shadow-lg z-50">
+                  <div className="py-2">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-2 text-xs font-medium border-b border-gray-200">
+                          Hi, {user.email?.split('@')[0]}
+                        </div>
+                        <Link
+                          to="/orders"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="block px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                        >
+                          Order History
+                        </Link>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setProfileDropdownOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <Link
+                        to="/login"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="block px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                      >
+                        Login
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button type="button" onClick={() => setCartOpen(true)} className="w-20 border-l-4 border-black flex items-center justify-center hover:bg-tb-orange hover:text-white transition-colors relative">
               <span className="font-mono text-lg font-bold">{cartCount}</span>
               {cartCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-tb-orange rounded-full" />}
@@ -194,6 +246,64 @@ const VisualCollageHome = () => {
                 </Link>
                 );
               })}
+              
+              {/* Profile dropdown for mobile */}
+              <div className="relative">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="block w-full text-left px-6 py-4 border-t-4 border-black text-xs font-bold uppercase hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </button>
+                
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border-2 border-black shadow-lg z-50">
+                    <div className="py-2">
+                      {user ? (
+                        <>
+                          <div className="px-4 py-2 text-xs font-medium border-b border-gray-200">
+                            Hi, {user.email?.split('@')[0]}
+                          </div>
+                          <Link
+                            to="/orders"
+                            onClick={() => {
+                              setProfileDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                          >
+                            Order History
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setProfileDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                          >
+                            Logout
+                          </button>
+                        </>
+                      ) : (
+                        <Link
+                          to="/login"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="block px-4 py-2 text-xs hover:bg-gray-100 transition-colors"
+                        >
+                          Login
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </nav>
           )}
         </header>
@@ -352,8 +462,8 @@ const VisualCollageHome = () => {
                     </div>
                   </div>
                   <div className="text-xs font-mono opacity-50">
-                    <div className="mb-1">california, usa</div>
-                    <div>34.0522°n / 118.2437°w</div>
+                    <div className="mb-1">kingston, jamaica</div>
+                    <div>17.9712°n / 76.7928°w</div>
                   </div>
                 </div>
               </div>
