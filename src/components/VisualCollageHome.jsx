@@ -152,8 +152,8 @@ const VisualCollageHome = () => {
         {/* Header */}
         <header className="sticky top-0 z-50 bg-white border-b-4 border-black">
           <div className="flex items-stretch">
-            <div className="w-48 border-r-4 border-black p-4 flex items-center">
-              <button type="button" onClick={() => navigateTo('home')} className="text-xl font-black lowercase tracking-tight hover:opacity-60 transition-opacity">
+            <div className="w-48 border-r-4 border-black p-4 flex items-center lg:w-48 md:w-40 sm:w-32 max-sm:w-28">
+              <button type="button" onClick={() => navigateTo('home')} className="text-xl font-black lowercase tracking-tight hover:opacity-60 transition-opacity md:text-lg sm:text-base max-sm:text-sm">
                 totally baked
               </button>
             </div>
@@ -221,15 +221,22 @@ const VisualCollageHome = () => {
                 </div>
               )}
             </div>
-            <button type="button" onClick={() => setCartOpen(true)} className="w-20 border-l-4 border-black flex items-center justify-center hover:bg-tb-orange hover:text-white transition-colors relative">
+            <button type="button" onClick={() => setCartOpen(true)} className="hidden lg:flex w-20 border-l-4 border-black items-center justify-center hover:bg-tb-orange hover:text-white transition-colors relative">
               <span className="font-mono text-lg font-bold">{cartCount}</span>
               {cartCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-tb-orange rounded-full" />}
             </button>
-            <button type="button" onClick={() => setMobileMenuOpen((prev) => !prev)} className="lg:hidden w-16 border-l-4 border-black flex items-center justify-center hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                <path strokeLinecap="square" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            {/* Mobile right-side elements */}
+            <div className="lg:hidden flex items-center ml-auto">
+              <button type="button" onClick={() => setCartOpen(true)} className="w-20 border-l-4 border-black flex items-center justify-center hover:bg-tb-orange hover:text-white transition-colors relative md:w-20 sm:w-18 max-sm:w-16">
+                <span className="font-mono text-lg font-bold md:text-lg sm:text-base max-sm:text-sm">{cartCount}</span>
+                {cartCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-tb-orange rounded-full" />}
+              </button>
+              <button type="button" onClick={() => setMobileMenuOpen((prev) => !prev)} className="w-20 border-l-4 border-black flex items-center justify-center hover:bg-gray-100 md:w-20 sm:w-18 max-sm:w-16">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-6 sm:h-5 max-sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                  <path strokeLinecap="square" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
           {mobileMenuOpen && (
             <nav className="lg:hidden border-t-4 border-black">
