@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { createOrder, getUserProfile } from '../lib/orders';
 
 const CheckoutPage = ({ cartCount, cartItems, removeFromCart, updateQuantity, clearCart }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,6 +24,32 @@ const CheckoutPage = ({ cartCount, cartItems, removeFromCart, updateQuantity, cl
     medicalCard: '',
     ageVerification: false
   });
+
+  // Load user profile data if logged in
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (user) {
+        try {
+          const profile = await getUserProfile(user.uid);
+          setUserProfile(profile);
+          if (profile) {
+            setFormData(prev => ({
+              ...prev,
+              firstName: profile.firstName || '',
+              lastName: profile.lastName || '',
+              email: user.email || '',
+              phone: profile.phone || '',
+              medicalCard: profile.medicalCard || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+        }
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.0875; // 8.75% tax
@@ -59,13 +91,58 @@ const CheckoutPage = ({ cartCount, cartItems, removeFromCart, updateQuantity, cl
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Process order with real data
-    console.log('Order submitted:', { formData, cartItems });
-    // Clear cart after successful order
-    clearCart();
-    alert('Order placed successfully! Thank you for your purchase.');
+    setLoading(true);
+
+    try {
+      // Create order data
+      const orderData = {
+        customerInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.deliveryMethod === 'delivery' ? formData.address : '',
+          city: formData.deliveryMethod === 'delivery' ? formData.city : '',
+          state: formData.deliveryMethod === 'delivery' ? formData.state : '',
+          zipCode: formData.deliveryMethod === 'delivery' ? formData.zipCode : '',
+          medicalCard: formData.medicalCard,
+          isMedicalPatient: !!formData.medicalCard
+        },
+        orderDetails: {
+          items: cartItems.map(item => ({
+            _id: item._id,
+            name: item.name,
+            type: item.type,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          subtotal,
+          tax,
+          total,
+          deliveryMethod: formData.deliveryMethod,
+          paymentMethod: formData.paymentMethod
+        },
+        status: 'pending'
+      };
+
+      // Create order in Firestore
+      const order = await createOrder(user?.uid || 'guest', orderData);
+      
+      // Clear cart after successful order
+      await clearCart();
+      
+      // Navigate to order confirmation or success page
+      alert(`Order placed successfully! Order #${order.orderNumber}`);
+      navigate('/');
+      
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -375,9 +452,10 @@ const CheckoutPage = ({ cartCount, cartItems, removeFromCart, updateQuantity, cl
             {/* Place Order Button */}
             <button
               type="submit"
-              className="w-full border-2 border-black bg-black text-white px-6 py-4 text-lg font-bold hover:bg-neutral-800 transition-colors"
+              disabled={loading}
+              className="w-full border-2 border-black bg-black text-white px-6 py-4 text-lg font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50"
             >
-              place order → ${total.toFixed(2)}
+              {loading ? 'Processing...' : `place order → ${total.toFixed(2)}`}
             </button>
 
             {/* Security Notice */}

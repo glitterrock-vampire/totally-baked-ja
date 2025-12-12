@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 const Header = ({ cartCount, currentPage, setCurrentPage }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   const navigateTo = (page) => {
     setCurrentPage(page);
     setMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -52,6 +58,33 @@ const Header = ({ cartCount, currentPage, setCurrentPage }) => {
             collectibles
           </Link>
         </nav>
+        
+        <div className="hidden lg:flex items-center border-l-4 border-black">
+          {user ? (
+            <div className="flex items-center gap-4 px-4">
+              <Link
+                to="/orders"
+                className="text-xs font-medium hover:text-tb-orange transition-colors"
+              >
+                Orders
+              </Link>
+              <span className="text-xs font-medium">Hi, {user.email?.split('@')[0]}</span>
+              <button
+                onClick={handleLogout}
+                className="text-xs font-medium hover:text-red-600 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 text-xs font-medium hover:text-tb-orange transition-colors"
+            >
+              Login
+            </Link>
+          )}
+        </div>
         
         <Link
           to="/checkout"

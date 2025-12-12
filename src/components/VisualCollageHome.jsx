@@ -477,13 +477,6 @@ const VisualCollageHome = () => {
             )}
           </section>
         )}
-
-        {/* Footer */}
-        <footer className="p-6 text-center">
-          <div className="font-mono text-[9px] uppercase tracking-widest opacity-50">
-            © 2024 totally baked systems inc. / all rights reserved
-          </div>
-        </footer>
       </div>
 
       {/* Cart Sidebar */}
