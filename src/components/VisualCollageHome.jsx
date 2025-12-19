@@ -327,7 +327,9 @@ const VisualCollageHome = () => {
                     <h1 className="text-7xl lg:text-9xl font-black lowercase leading-[0.85] mb-8">
                     {(homepage?.heroHeadline || 'precision\nengineered\ncannabis').split('\n').map((line, idx) => (
                       <React.Fragment key={idx}>
-                        {line}
+                        <span className={line === 'cannabis' ? 'text-sage-green' : ''}>
+                          {line}
+                        </span>
                         {idx < 2 && <br />}
                       </React.Fragment>
                     ))}

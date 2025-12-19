@@ -13,6 +13,7 @@ module.exports = {
         'tb-orange': '#ff6600',
         'tb-green': '#00ff00',
         'tb-yellow': '#ffff00',
+        'sage-green': '#6b8e5a',
       },
     },
   },
