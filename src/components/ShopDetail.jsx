@@ -128,7 +128,7 @@ const ShopDetail = ({ addToCart, shopId: propShopId }) => {
                     <img
                       src={getImageUrl(product.images?.[0])}
                       alt={product.name}
-                      className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                      className="w-full h-full object-cover transition-all duration-300"
                     />
                     <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
                       <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">

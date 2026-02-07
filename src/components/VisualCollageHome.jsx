@@ -342,7 +342,7 @@ const VisualCollageHome = () => {
                 </div>
                 {featuredProduct && (
                   <button type="button" onClick={() => openQuickView(featuredProduct)} className="lg:col-span-4 relative overflow-hidden group cursor-pointer min-h-[400px]">
-                    <img src={getImageUrl(featuredProduct.images?.[0])} alt={featuredProduct.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    <img src={getImageUrl(featuredProduct.images?.[0])} alt={featuredProduct.name} className="w-full h-full object-cover transition-all duration-500" />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                     <div className="absolute bottom-0 left-0 w-full p-6 bg-white/95 border-t-4 border-black">
                       <div className="font-mono text-[10px] uppercase tracking-widest mb-2 opacity-50">featured</div>
@@ -403,7 +403,7 @@ const VisualCollageHome = () => {
                 {mostSoldItems && mostSoldItems.map((product) => (
                   <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
                     <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
-                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
                       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
                         <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
@@ -497,7 +497,7 @@ const VisualCollageHome = () => {
                 {herbProducts.map((product) => (
                   <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
                     <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
-                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
                       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
                         <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
@@ -536,7 +536,7 @@ const VisualCollageHome = () => {
                 {delightProducts.map((product) => (
                   <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
                     <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
-                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
                       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
                         <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
@@ -575,7 +575,7 @@ const VisualCollageHome = () => {
                 {collectibleProducts.map((product) => (
                   <div key={product._id} className="border-r-4 border-b-4 border-black product-grid-item cursor-pointer">
                     <div onClick={() => openQuickView(product)} className="w-full aspect-square relative overflow-hidden bg-gray-100 border-b-4 border-black group cursor-pointer">
-                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <img src={getImageUrl(product.images?.[0])} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
                       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
                         <span className="bg-white px-2 py-1 text-[9px] font-bold uppercase tracking-wider">{product.category || product.type}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="bg-black text-white w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-tb-orange">
